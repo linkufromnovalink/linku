@@ -1,0 +1,22 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+const users = []; // In-memory user store (use database in real apps)
+
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = { username, password: hashedPassword };
+    users.push(user);
+    res.status(201).send('User created');
+});
+
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(user => user.username === username);
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).send('Invalid credentials');
+    }
+    const token = jwt.sign({ username: user.username }, 'secret_key');
+    res.json({ token });
+});
